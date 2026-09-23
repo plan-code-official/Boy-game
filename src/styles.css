@@ -8,8 +8,8 @@ body {
 
 canvas {
   display: block;
-  width: 100vw;
-  height: 100svh; /* Use svh to handle mobile address bars */
+  /* Pixi's resizeTo: window handles width and height automatically. 
+     Do not set explicit vw/svh here as it causes layout stretching and shifts on mobile rotation. */
 }
 
 /* Glassmorphism Panel styles */

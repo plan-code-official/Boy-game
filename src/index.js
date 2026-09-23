@@ -179,12 +179,16 @@ import EndGameFlow from './EndGameFlow';
 
   // Handle window resizing dynamically to maintain center positioning
   window.addEventListener('resize', () => {
-    scene.resize(app.screen.width, app.screen.height);
-    scene.view.y = app.screen.height;
-    player.view.x = app.screen.width / 2;
-    player.view.y = app.screen.height - scene.floorHeight;
-    player.groundY = player.view.y;
-    player.view.scale.set(scene.scale * PLAYER_CAMERA_SCALE);
+    // A slight delay helps mobile browsers correctly report dimensions after an orientation change
+    setTimeout(() => {
+      app.resize(); // Force pixi to re-evaluate window size
+      scene.resize(app.screen.width, app.screen.height);
+      scene.view.y = app.screen.height;
+      player.view.x = app.screen.width / 2;
+      player.view.y = app.screen.height - scene.floorHeight;
+      player.groundY = player.view.y;
+      player.view.scale.set(scene.scale * PLAYER_CAMERA_SCALE);
+    }, 100);
   });
 
   // Containers for balloons, bullets, and floating effects
@@ -371,10 +375,7 @@ import EndGameFlow from './EndGameFlow';
   updateHUD();
 
   // Initialize Rotate Screen Overlay state (let CSS handle orientation logic, just remove any default hidden classes if we want it to work)
-  const portraitOverlayEl = document.getElementById('portrait-overlay');
-  if (portraitOverlayEl) {
-    portraitOverlayEl.classList.remove('hidden');
-  }
+  // The portrait overlay is handled purely by CSS media queries now.
 
   // Animate the scene and the character based on the controller's input.
   app.ticker.add(() => {
