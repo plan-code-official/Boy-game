@@ -154,7 +154,6 @@ import EndGameFlow from './EndGameFlow';
   setupTouchBtn('btn-left', 'left');
   setupTouchBtn('btn-right', 'right');
   setupTouchBtn('btn-down', 'down');
-  setupTouchBtn('btn-fire', 'shoot');
   setupTouchBtn('btn-run', 'run');
   setupTouchBtn('btn-jump-right', 'up');
 

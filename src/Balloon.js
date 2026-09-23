@@ -139,10 +139,10 @@ export class Balloon {
 
     // Balloon types configuration matching Figma proportions
     const types = {
-      small: { radius: 34, speed: 3.2, points: 25, color: 0xc084fc, scoreColor: '#c084fc' },
-      normal: { radius: 44, speed: 2.0, points: 10, color: 0x8b5cf6, scoreColor: '#c084fc' },
-      large: { radius: 52, speed: 1.4, points: 5, color: 0x6d4cc4, scoreColor: '#c084fc' },
-      special: { radius: 40, speed: 3.8, points: 50, color: 0xe879f9, scoreColor: '#e879f9' }
+      small: { radius: 25, speed: 3.2, points: 25, color: 0xc084fc, scoreColor: '#c084fc' },
+      normal: { radius: 32, speed: 2.0, points: 10, color: 0x8b5cf6, scoreColor: '#c084fc' },
+      large: { radius: 38, speed: 1.4, points: 5, color: 0x6d4cc4, scoreColor: '#c084fc' },
+      special: { radius: 30, speed: 3.8, points: 50, color: 0xe879f9, scoreColor: '#e879f9' }
     };
 
     const config = types[type] || types.normal;
