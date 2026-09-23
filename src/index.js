@@ -18,6 +18,7 @@ import { GameAPI, BOY_GAME_ID, wordToLetters } from './gameApi';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import EndGameFlow from './EndGameFlow';
+import WelcomeScreen from './WelcomeScreen/WelcomeScreen';
 
 // Asynchronous IIFE
 (async () => {
@@ -68,6 +69,43 @@ import EndGameFlow from './EndGameFlow';
     return; // block game
   }
 
+  // Remove old static HTML loading overlay completely as it is now handled by React
+  if (loadingOverlayEl) {
+    loadingOverlayEl.style.display = 'none';
+  }
+
+  // Setup React Root for Welcome Screen
+  const reactWelcomeRootEl = document.createElement('div');
+  reactWelcomeRootEl.id = 'react-welcome-root';
+  document.body.appendChild(reactWelcomeRootEl);
+  const welcomeRoot = createRoot(reactWelcomeRootEl);
+
+  let gameStartedViaWelcome = false;
+
+  const renderWelcome = (isLoading, count = 0) => {
+    welcomeRoot.render(
+      React.createElement(WelcomeScreen, {
+        questionsCount: count,
+        isLoading: isLoading,
+        onStart: () => {
+          welcomeRoot.unmount();
+          reactWelcomeRootEl.remove();
+          gameStartedViaWelcome = true;
+          // Start backend session immediately on click
+          if (gameAPI && !sessionId) {
+            const gameIdToUse = urlGameId || BOY_GAME_ID;
+            gameAPI.startSession(gameIdToUse, urlLessonId).then(session => {
+              sessionId = session.sessionId || session.id;
+              if (sessionId === 'null') sessionId = null;
+            }).catch(err => {});
+          }
+        }
+      })
+    );
+  };
+
+  renderWelcome(true, 0);
+
   if (token) {
     gameAPI = new GameAPI(token);
     try {
@@ -89,10 +127,9 @@ import EndGameFlow from './EndGameFlow';
           id: q.id
         };
       });
-      // Remove log
-      if (loadingOverlayEl) loadingOverlayEl.classList.add('hidden');
+      
+      renderWelcome(false, validQuestions.length);
     } catch (err) {
-      // Remove error log
       showError("Failed to load game questions.");
       return; // block game
     }
@@ -390,8 +427,9 @@ import EndGameFlow from './EndGameFlow';
       return;
     }
 
-    // Start game upon any player interaction
+    // Start game if welcome screen was clicked or any player interaction happens
     if (!gameStarted && (
+      gameStartedViaWelcome ||
       controller.keys.left.pressed ||
       controller.keys.right.pressed ||
       controller.keys.up.pressed ||
@@ -399,7 +437,7 @@ import EndGameFlow from './EndGameFlow';
     )) {
       gameStarted = true;
       
-      // Start backend session
+      // Start backend session if not already started via welcome screen click
       if (gameAPI && !sessionId) {
         const gameIdToUse = urlGameId || BOY_GAME_ID;
         gameAPI.startSession(gameIdToUse, urlLessonId).then(session => {
@@ -411,6 +449,9 @@ import EndGameFlow from './EndGameFlow';
         });
       }
     }
+
+    // Do not process gameplay if we haven't started yet!
+    if (!gameStarted) return;
 
     // Update character's state based on the controller's input.
     player.state.walk = controller.keys.left.pressed || controller.keys.right.pressed;
