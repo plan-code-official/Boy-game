@@ -7,7 +7,7 @@
   width: 100vw;
   height: 100vh;
   height: 100dvh;
-  background: radial-gradient(circle at center, #113645, #08171d);
+  background: url('../BG.png') center / cover no-repeat;
   z-index: 5000;
   display: flex;
   flex-direction: column;
