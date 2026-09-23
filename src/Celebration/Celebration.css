@@ -104,10 +104,10 @@
   to { transform: scale(1.08) rotate(9deg); opacity: 1; }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 768px), (max-height: 620px) {
   .celebration-content { padding-bottom: 7vh; }
-  .celebration-robots { width: 97vw; max-height: 58vh; }
-  .celebration-word { margin-top: -6px; font-size: clamp(4rem, 17vw, 6.5rem); }
+  .celebration-robots { width: min(97vw, 600px); max-height: 55vh; }
+  .celebration-word { margin-top: -6px; font-size: clamp(3.5rem, 15vw, 5.5rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {
