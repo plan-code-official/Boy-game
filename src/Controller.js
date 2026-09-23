@@ -96,8 +96,8 @@ export class Controller {
   setTouchKeyState(key, isPressed) {
     if (!this.keys[key]) return;
     this.keys[key].pressed = isPressed;
-    if (key === 'shoot' && isPressed) {
-      this.lastShootType = 'keyboard'; // Treat UI button same as keyboard so it doesn't target pointer coords
+    if (isPressed) {
+      this.lastShootType = 'keyboard'; // Treat all UI buttons as keyboard input so it stops aiming at old pointer taps
     }
   }
 }
