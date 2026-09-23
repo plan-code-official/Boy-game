@@ -226,52 +226,58 @@
 @media (max-width: 768px), (max-height: 620px) {
   .results-screen {
     justify-content: center;
-    gap: clamp(3px, 0.8vh, 8px);
-    padding: clamp(5px, 1vh, 10px) clamp(6px, 2vw, 14px);
+    gap: clamp(3px, 1.5vh, 8px);
+    padding: clamp(5px, 1vh, 10px);
   }
 
   .results-panel {
-    width: min(95vw, 1080px, calc(88vh * 1.55));
+    /* Bottleneck is height on mobile landscape. Force it to fit height, let aspect-ratio compute width. */
+    width: auto;
+    height: clamp(200px, 60vh, 260px);
+    max-width: 95vw;
   }
 
   .results-panel__content {
-    padding: clamp(10px, 3vh, 30px) clamp(12px, 3vw, 40px) clamp(10px, 2.5vh, 20px);
-    gap: clamp(6px, 1.5vw, 16px);
+    padding: clamp(8px, 2vh, 20px) clamp(12px, 3vw, 40px) clamp(8px, 2vh, 16px);
+    gap: clamp(4px, 1vh, 12px);
     transform: translateY(clamp(-20px, -2vh, -8px));
   }
 
   .results-score-card {
-    min-height: clamp(60px, 16vh, 100px);
-    margin-top: clamp(-10px, -0.5vh, 0px);
-    border-radius: clamp(16px, 2vw, 24px);
-    padding: 6px 12px;
+    min-height: clamp(50px, 12vh, 80px);
+    margin-top: 0;
+    border-radius: clamp(12px, 2vw, 20px);
+    padding: 4px 12px;
   }
 
   .results-score-card__label {
-    font-size: clamp(0.9rem, 2vw, 1.4rem);
+    font-size: clamp(0.8rem, 2vw, 1.2rem);
   }
 
   .results-score-card strong {
-    font-size: clamp(1.2rem, 3.2vw, 2.2rem);
+    font-size: clamp(1.1rem, 3vw, 1.8rem);
   }
 
   .results-stat-card {
-    border-radius: clamp(12px, 2vw, 24px);
-    padding: clamp(4px, 0.8vw, 10px) clamp(4px, 0.8vw, 10px);
+    /* Heavily restrict stat card size so it doesn't blow up the panel */
+    width: min(30%, 110px);
+    border-radius: clamp(10px, 2vw, 20px);
+    padding: clamp(4px, 0.5vw, 8px);
   }
 
   .results-stat-card strong {
-    font-size: clamp(1.2rem, 3.5vw, 2.4rem);
+    font-size: clamp(1rem, 2.5vw, 1.6rem);
   }
 
   .results-stat-card span {
-    font-size: clamp(0.85rem, 2vw, 1.4rem);
-    margin-top: clamp(1px, 0.5vh, 4px);
+    font-size: clamp(0.75rem, 1.8vw, 1.1rem);
+    margin-top: 1px;
   }
 
   .results-actions {
     width: min(96vw, 620px);
     gap: clamp(8px, 2vw, 14px);
+    margin-top: clamp(2px, 1vh, 8px);
   }
 
   .results-action {
