@@ -378,11 +378,9 @@ import EndGameFlow from './EndGameFlow';
 
   // Animate the scene and the character based on the controller's input.
   app.ticker.add(() => {
-    // If the game is completed, freeze loop and check for restart prompts
+    // If the game is completed, completely freeze the loop.
+    // Restarts are now exclusively handled by the React EndGame modal.
     if (gameWon) {
-      if (controller.keys.shoot.pressed || controller.keys.up.pressed) {
-        resetGame();
-      }
       return;
     }
 
@@ -730,7 +728,7 @@ import EndGameFlow from './EndGameFlow';
                     wrongAnswers: totalMistakes,
                     coins: earnedCoins,
                     onRetry: () => window.location.reload(),
-                    onBack: () => window.location.href = '/'
+                    onBack: () => window.history.back()
                   })
                 );
               };
