@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Boy Game built with PixiJS and Spine",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite --port 5175",
     "start": "vite --port 5175",
