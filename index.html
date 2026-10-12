@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>لعبة الحروف العربية للأطفال</title>
+  <title>لعبة الولد</title>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <link rel="icon" type="image/svg+xml" href="/logo.png" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <!-- Import Google Fonts including Cairo for clean premium Arabic rendering -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&family=Orbitron:wght@600;800&family=Outfit:wght@400;500;700&family=Lateef:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&family=Orbitron:wght@600;800&family=Outfit:wght@400;500;700&family=Lateef:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="src/styles.css">
 </head>
+
 <body>
   <!-- Game UI Header and HUD -->
   <div id="hud-container">
@@ -20,7 +26,7 @@
           <img src="/src/assets/daddcoin.webp" alt="Coins" class="hud-coin-icon">
           <span id="score-val">0</span>
         </div>
-        
+
         <!-- Center: Question Info -->
         <div class="header-question-info">
           <div class="header-question-label">السؤال</div>
@@ -39,7 +45,7 @@
           <img src="/src/assets/ExitButton.svg" alt="Exit">
         </button>
       </div>
-      
+
       <!-- Progress Bar -->
       <div class="header-progress-track">
         <div id="header-progress-fill" class="header-progress-fill"></div>
@@ -50,7 +56,10 @@
   <div id="question-media-panel" class="question-media-panel hidden" dir="rtl">
     <div id="question-media-text" class="question-media-text"></div>
     <button id="question-media-audio" class="question-media-audio" type="button" aria-label="تشغيل صوت السؤال">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l4 3V7l-4 3H4Z"/><path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 10v4h3l4 3V7l-4 3H4Z" />
+        <path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" />
+      </svg>
     </button>
     <img id="question-media-image" class="question-media-image" alt="صورة السؤال" />
   </div>
@@ -67,7 +76,8 @@
   <!-- Answer feedback, styled to match the other games -->
   <div id="answer-feedback" class="answer-feedback hidden" role="status" aria-live="polite">
     <div class="answer-feedback-card">
-      <svg class="answer-feedback__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      <svg class="answer-feedback__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
       <span class="answer-feedback__text"></span>
     </div>
   </div>
@@ -81,7 +91,8 @@
   <!-- Portrait Orientation Warning Overlay -->
   <div id="portrait-overlay" class="rotate-screen-overlay">
     <div class="rotate-icon-container">
-      <svg class="phone-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="phone-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
         <line x1="12" y1="18" x2="12.01" y2="18"></line>
       </svg>
@@ -94,32 +105,54 @@
     <div class="dpad-container">
       <div class="dpad-row">
         <button class="ctrl-btn dpad-btn" id="btn-up">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M12 19V5M5 12l7-7 7 7" />
+          </svg>
         </button>
       </div>
       <div class="dpad-row">
         <button class="ctrl-btn dpad-btn" id="btn-left">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
         </button>
         <button class="ctrl-btn dpad-btn" id="btn-down">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M12 5v14M19 12l-7 7-7-7" />
+          </svg>
         </button>
         <button class="ctrl-btn dpad-btn" id="btn-right">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
     </div>
-    
+
     <div class="action-container" style="display: flex; flex-direction: column; gap: 15px; width: 85px;">
-      <button class="ctrl-btn action-btn" id="btn-jump-right" style="background: rgba(50, 255, 50, 0.2); border-color: rgba(50, 255, 50, 0.5);">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      <button class="ctrl-btn action-btn" id="btn-jump-right"
+        style="background: rgba(50, 255, 50, 0.2); border-color: rgba(50, 255, 50, 0.5);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M12 19V5M5 12l7-7 7 7" />
+        </svg>
       </button>
-      <button class="ctrl-btn action-btn" id="btn-run" style="background: rgba(50, 200, 255, 0.2); border-color: rgba(50, 200, 255, 0.5);">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+      <button class="ctrl-btn action-btn" id="btn-run"
+        style="background: rgba(50, 200, 255, 0.2); border-color: rgba(50, 200, 255, 0.5);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polygon points="13 19 22 12 13 5 13 19"></polygon>
+          <polygon points="2 19 11 12 2 5 2 19"></polygon>
+        </svg>
       </button>
     </div>
   </div>
 
   <script type="module" src="/src/index.js"></script>
 </body>
+
 </html>
