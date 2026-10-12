@@ -6,7 +6,7 @@ import './ResultsPanel.css';
 import panelArt from '../assets/results-panel-empty.png';
 import celebrationTitle from './assets/good.png';
 import exitButtonImage from '../assets/Exit1.png';
-import retryButtonImage from '../assets/start_transparent.png';
+import retryButtonImage from '../assets/retry.png';
 
 const numberValue = (value) => {
   const parsed = Number(value);
@@ -27,16 +27,19 @@ export default function ResultsPanel({
   wrongAnswers,
   coins,
   totalQuestions,
+  totalAnswers,
+  score,
   onRetry,
   onBack,
   debugOverlay,
 }) {
-  const correct = numberValue(correctAnswers);
+  const correct = numberValue(correctAnswers ?? score);
   const wrong = numberValue(wrongAnswers);
   const earnedCoins = numberValue(coins);
-  const questionCount = numberValue(totalQuestions) || correct + wrong;
-  const correctPercent = questionCount ? Math.round((correct / questionCount) * 100) : 0;
-  const isSuccess = questionCount > 0 && correctPercent >= 50;
+  const total = numberValue(totalAnswers) || numberValue(totalQuestions) || correct;
+  const denominator = total + wrong;
+  const correctPercent = denominator > 0 ? Math.max(0, Math.min(100, Math.round((correct / denominator) * 100))) : 0;
+  const isSuccess = denominator > 0 && correctPercent >= 50;
 
   // The layout is sized from the exported image's real width / height.
   const [ratio, setRatio] = useState(null);

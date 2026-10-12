@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Celebration from './Celebration/Celebration';
 import ResultsPanel from './ResultsPanel/ResultsPanel';
+import './EndGameFlow.css';
 
 export default function EndGameFlow({
+  isSubmitting = false,
   score,
   totalScore,
+  totalAnswers,
   correctAnswers,
   wrongAnswers,
   coins,
@@ -14,13 +17,11 @@ export default function EndGameFlow({
   const [showCelebration, setShowCelebration] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-  // Expose a way to start the flow externally if needed, 
-  // but since we mount it on win, we can just run it immediately.
-  // Actually, let's start celebration on mount as this component 
-  // is only rendered when the game is won.
-  React.useEffect(() => {
-    setShowCelebration(true);
-  }, []);
+  useEffect(() => {
+    if (!isSubmitting) {
+      setShowCelebration(true);
+    }
+  }, [isSubmitting]);
 
   const handleCelebrationComplete = () => {
     setShowCelebration(false);
@@ -29,10 +30,18 @@ export default function EndGameFlow({
 
   return (
     <>
-      <Celebration 
-        isVisible={showCelebration} 
-        onComplete={handleCelebrationComplete} 
-      />
+      {isSubmitting && (
+        <div className="submitting-overlay" aria-busy="true">
+          <div className="submitting-spinner" />
+        </div>
+      )}
+
+      {!isSubmitting && showCelebration && (
+        <Celebration 
+          isVisible={showCelebration} 
+          onComplete={handleCelebrationComplete} 
+        />
+      )}
       
       {showResults && (
         <ResultsPanel
@@ -42,6 +51,7 @@ export default function EndGameFlow({
           wrongAnswers={wrongAnswers}
           coins={coins}
           totalQuestions={totalScore}
+          totalAnswers={totalAnswers || totalScore}
           onRetry={onRetry}
           onBack={onBack}
         />

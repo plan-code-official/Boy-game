@@ -19,6 +19,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import EndGameFlow from './EndGameFlow';
 import WelcomeScreen from './WelcomeScreen/WelcomeScreen';
+import ErrorScreen from './components/ErrorScreen/ErrorScreen';
 import { handleExitSite } from './utils/navigation';
 
 // Asynchronous IIFE
@@ -60,6 +61,69 @@ import { handleExitSite } from './utils/navigation';
   const answerFeedbackEl = document.getElementById('answer-feedback');
   let answerFeedbackTimer = null;
 
+  const renderErrorScreen = ({ description, titleLine1, titleLine2, titleLine3 } = {}) => {
+    if (loadingOverlayEl) loadingOverlayEl.style.display = 'none';
+    const hudContainer = document.getElementById('hud-container');
+    if (hudContainer) hudContainer.style.display = 'none';
+    if (app?.canvas) app.canvas.style.display = 'none';
+    
+    const reactWelcome = document.getElementById('react-welcome-root');
+    if (reactWelcome) reactWelcome.remove();
+    const reactEndgame = document.getElementById('react-endgame-root');
+    if (reactEndgame) reactEndgame.remove();
+    if (errorOverlayEl) errorOverlayEl.remove();
+    const mobileControls = document.getElementById('mobile-controls');
+    if (mobileControls) mobileControls.style.display = 'none';
+
+    let errorRootEl = document.getElementById('react-error-root');
+    if (!errorRootEl) {
+      errorRootEl = document.createElement('div');
+      errorRootEl.id = 'react-error-root';
+      errorRootEl.style.position = 'fixed';
+      errorRootEl.style.top = '0';
+      errorRootEl.style.left = '0';
+      errorRootEl.style.width = '100vw';
+      errorRootEl.style.height = '100vh';
+      errorRootEl.style.zIndex = '99999';
+      document.body.appendChild(errorRootEl);
+    }
+
+    const errorRoot = createRoot(errorRootEl);
+    errorRoot.render(
+      React.createElement(ErrorScreen, {
+        titleLine1,
+        titleLine2,
+        titleLine3,
+        description: description || 'لا يمكننا العثور على هذه الصفحة. دعنا نذهب إلى مكان مألوف.',
+        onExit: handleExitSite
+      })
+    );
+  };
+  window.renderErrorScreen = renderErrorScreen;
+
+  // Global listeners for crashes
+  window.addEventListener('error', (event) => {
+    console.error("Uncaught runtime error (app crash):", event.error);
+    if (!document.getElementById('react-error-root') && !document.getElementById('react-endgame-root')) {
+      renderErrorScreen({
+        description: 'حدث خطأ غير متوقع أثناء تشغيل اللعبة. دعنا نذهب إلى مكان مألوف.'
+      });
+    }
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error("Unhandled promise rejection:", event.reason);
+    if (!document.getElementById('react-error-root') && !document.getElementById('react-endgame-root')) {
+      const reasonStr = String(event.reason?.message || event.reason || '');
+      const isAuth = reasonStr.toLowerCase().includes('token') || reasonStr.toLowerCase().includes('refresh') || reasonStr.toLowerCase().includes('auth') || event.reason?.status === 401;
+      renderErrorScreen({
+        description: isAuth
+          ? 'تعذر تحديث جلسة التسجيل أو انتهت صلاحيتها. يرجى العودة للرئيسية.'
+          : 'حدث خطأ غير متوقع في الاتصال. دعنا نذهب إلى مكان مألوف.'
+      });
+    }
+  });
+
   const showAnswerFeedback = (isCorrect, duration = 750) => {
     if (!answerFeedbackEl) return;
     const card = answerFeedbackEl.querySelector('.answer-feedback-card');
@@ -81,15 +145,20 @@ import { handleExitSite } from './utils/navigation';
   };
 
   const showError = (msg) => {
-    if (loadingOverlayEl) loadingOverlayEl.classList.add('hidden');
-    if (errorOverlayEl) {
-      errorOverlayEl.classList.remove('hidden');
-      if (errorMessageEl) errorMessageEl.textContent = msg;
-    }
+    renderErrorScreen({ description: msg });
   };
 
-  if (!token || !urlLessonId) {
-    showError("Missing authentication token or lesson ID.");
+  if (!urlLessonId) {
+    renderErrorScreen({
+      description: 'لا يمكننا العثور على الدرس المطلوب. يرجى التأكد من الرابط أو العودة للرئيسية.'
+    });
+    return; // block game
+  }
+
+  if (!token) {
+    renderErrorScreen({
+      description: 'جلسة تسجيل الدخول غير صالحة أو منتهية. يرجى العودة للرئيسية.'
+    });
     return; // block game
   }
 
@@ -183,9 +252,22 @@ import { handleExitSite } from './utils/navigation';
         };
       });
       
+      if (!validQuestions || validQuestions.length === 0) {
+        renderErrorScreen({
+          description: 'لم يتم العثور على أي أسئلة متاحة في هذا الدرس.'
+        });
+        return; // block game
+      }
+
       renderWelcome(false, validQuestions.length);
     } catch (err) {
-      showError("Failed to load game questions.");
+      console.error("Failed to load questions or token damaged:", err);
+      const isAuthOrRefresh = err?.status === 401 || err?.message?.toLowerCase()?.includes('token') || err?.message?.toLowerCase()?.includes('auth');
+      renderErrorScreen({
+        description: isAuthOrRefresh
+          ? 'تعذر تحديث جلسة التسجيل أو انتهت صلاحيتها. يرجى العودة للرئيسية.'
+          : 'تعذر تحميل بيانات اللعبة في الوقت الحالي. دعنا نذهب إلى مكان مألوف.'
+      });
       return; // block game
     }
   }
@@ -856,27 +938,55 @@ import { handleExitSite } from './utils/navigation';
                 // No more words, completely finish the game session
                 gameWon = true;
 
-              const renderReactEndgame = (apiResult = {}) => {
-                const finalScore = apiResult.score || score;
-                const earnedCoins = apiResult.coins || score; // Match coins to score since there's no combo
+              let endgameRoot = null;
+              const renderReactEndgame = (isSubmitting = false, apiResult = {}) => {
+                const sessionData = apiResult?.session || apiResult?.data?.session || {};
+                const finalScore = apiResult?.score ?? apiResult?.data?.score ?? score;
+
+                // Extract coins from the first part of the complete endpoint response (data.coins)
+                let earnedCoins = 0;
+                if (typeof apiResult?.coins === 'number') {
+                  earnedCoins = apiResult.coins;
+                } else if (typeof apiResult?.data?.coins === 'number') {
+                  earnedCoins = apiResult.data.coins;
+                } else if (apiResult?.coins !== undefined && apiResult?.coins !== null) {
+                  earnedCoins = Number(apiResult.coins) || 0;
+                } else if (apiResult?.data?.coins !== undefined && apiResult?.data?.coins !== null) {
+                  earnedCoins = Number(apiResult.data.coins) || 0;
+                }
+
+                const finalCorrect = typeof sessionData?.correctAnswers === 'number'
+                  ? sessionData.correctAnswers
+                  : score;
+                // Every wrong char selected/hit in the game is counted in totalMistakes
+                const finalWrong = Math.max(totalMistakes, Number(sessionData?.wrongAnswers) || 0);
+                const totalQuestionsCount = wordsList.length;
                 
-                const reactRootEl = document.createElement('div');
-                reactRootEl.id = 'react-endgame-root';
-                reactRootEl.style.position = 'fixed';
-                reactRootEl.style.top = '0';
-                reactRootEl.style.left = '0';
-                reactRootEl.style.width = '100vw';
-                reactRootEl.style.height = '100vh';
-                reactRootEl.style.zIndex = '9999';
-                document.body.appendChild(reactRootEl);
+                let reactRootEl = document.getElementById('react-endgame-root');
+                if (!reactRootEl) {
+                  reactRootEl = document.createElement('div');
+                  reactRootEl.id = 'react-endgame-root';
+                  reactRootEl.style.position = 'fixed';
+                  reactRootEl.style.top = '0';
+                  reactRootEl.style.left = '0';
+                  reactRootEl.style.width = '100vw';
+                  reactRootEl.style.height = '100vh';
+                  reactRootEl.style.zIndex = '9999';
+                  document.body.appendChild(reactRootEl);
+                }
                 
-                const root = createRoot(reactRootEl);
-                root.render(
+                if (!endgameRoot) {
+                  endgameRoot = createRoot(reactRootEl);
+                }
+
+                endgameRoot.render(
                   React.createElement(EndGameFlow, {
+                    isSubmitting,
                     score: finalScore,
-                    totalScore: wordsList.length, // total correct possible is number of questions
-                    correctAnswers: score, // score is exactly number of correct answers
-                    wrongAnswers: totalMistakes,
+                    totalScore: totalQuestionsCount,
+                    totalAnswers: totalQuestionsCount,
+                    correctAnswers: finalCorrect,
+                    wrongAnswers: finalWrong,
                     coins: earnedCoins,
                     onRetry: () => window.location.reload(),
                     onBack: handleExitSite
@@ -886,17 +996,18 @@ import { handleExitSite } from './utils/navigation';
 
               if (gameAPI && sessionId) {
                 const currentSessionId = sessionId; // Capture to prevent it from being nullified by resetGame
+                renderReactEndgame(true);
                 gameAPI.submitAnswers(currentSessionId, sessionAnswers)
                   .then(() => gameAPI.completeSession(currentSessionId))
                   .then(result => {
-                    renderReactEndgame(result);
+                    renderReactEndgame(false, result);
                   })
                   .catch(err => {
                     console.error('Failed to complete session', err);
-                    renderReactEndgame();
+                    renderReactEndgame(false);
                   });
               } else {
-                renderReactEndgame();
+                renderReactEndgame(false);
               }
             } // Close the 'else' block for !hasMore
             }, 1500); // Close setTimeout
@@ -917,4 +1028,11 @@ import { handleExitSite } from './utils/navigation';
       }
     }
   });
-})();
+})().catch(err => {
+  console.error("Fatal game crash:", err);
+  if (window.renderErrorScreen && !document.getElementById('react-error-root')) {
+    window.renderErrorScreen({
+      description: 'حدث خطأ غير متوقع أثناء تشغيل اللعبة. دعنا نذهب إلى مكان مألوف.'
+    });
+  }
+});
