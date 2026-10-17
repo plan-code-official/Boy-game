@@ -18,36 +18,47 @@
 
 <body>
   <!-- Game UI Header and HUD -->
-  <div id="hud-container">
+  <div id="hud-container" style="display: none;">
     <div id="game-header-new">
       <div class="game-header-content">
-        <!-- Left: Coins (RTL visual right, but we align properly) -->
-        <div id="score-panel" class="header-coin-badge">
-          <img src="/src/assets/daddcoin.webp" alt="Coins" class="hud-coin-icon">
-          <span id="score-val">0</span>
+        <!-- Left: Lives & Coins -->
+        <div class="header-left-group">
+          <div class="header-lives" dir="rtl">
+            <span class="header-lives-label">القلوب</span>
+            <div class="header-hearts" id="header-hearts">
+              <img src="/src/assets/heart.png" alt="" class="is-active" />
+              <img src="/src/assets/heart.png" alt="" class="is-active" />
+              <img src="/src/assets/heart.png" alt="" class="is-active" />
+            </div>
+          </div>
+          <div id="score-panel" class="header-coin-badge" aria-label="النقاط">
+            <img src="/src/assets/daddcoin.webp" alt="Coins" class="hud-coin-icon">
+            <span id="score-val">0</span>
+          </div>
         </div>
 
-        <!-- Center: Question Info -->
-        <div class="header-question-info">
-          <div class="header-question-label">السؤال</div>
-          <div class="header-question-numbers" id="question-counter">1/5</div>
-        </div>
+        <!-- Center: Question Info & Word Slots -->
+        <div class="header-center-group">
+          <div class="header-question-info" dir="rtl">
+            <span class="header-question-label">السؤال</span>
+            <strong class="header-question-numbers" id="question-counter" dir="ltr">1/5</strong>
+          </div>
 
-        <!-- Center: Word Slots in Header Row -->
-        <div class="header-word-slots-container">
-          <div id="word-target-container">
-            <div id="word-slots"></div>
+          <div class="header-word-slots-container">
+            <div id="word-target-container">
+              <div id="word-slots"></div>
+            </div>
           </div>
         </div>
 
         <!-- Right: Exit Button -->
-        <button class="header-exit-btn" onclick="window.handleExitSite()">
+        <button class="header-exit-btn" type="button" onclick="window.handleExitSite()" aria-label="خروج إلى الرئيسية">
           <img src="/src/assets/ExitButton.svg" alt="Exit">
         </button>
       </div>
 
       <!-- Progress Bar -->
-      <div class="header-progress-track">
+      <div class="header-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1">
         <div id="header-progress-fill" class="header-progress-fill"></div>
       </div>
     </div>
@@ -101,7 +112,7 @@
   </div>
 
   <!-- Mobile On-Screen Controls -->
-  <div id="mobile-controls" class="hidden-desktop">
+  <div id="mobile-controls" class="hidden-desktop" style="display: none;">
     <div class="dpad-container">
       <div class="dpad-row">
         <button class="ctrl-btn dpad-btn" id="btn-up">

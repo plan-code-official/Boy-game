@@ -212,6 +212,10 @@ import { handleExitSite } from './utils/navigation';
           welcomeRoot.unmount();
           reactWelcomeRootEl.remove();
           gameStartedViaWelcome = true;
+          const hudContainer = document.getElementById('hud-container');
+          if (hudContainer) hudContainer.style.display = 'flex';
+          const mobileControls = document.getElementById('mobile-controls');
+          if (mobileControls) mobileControls.style.display = 'flex';
           // Start backend session immediately on click
           if (gameAPI && !sessionId) {
             const gameIdToUse = urlGameId || BOY_GAME_ID;
@@ -397,6 +401,8 @@ import { handleExitSite } from './utils/navigation';
   let gameStarted = false;
   let gameWon = false;
   let totalMistakes = 0;
+  const MAX_LIVES = 3;
+  let lives = MAX_LIVES;
 
   // Word Spelling Challenge States (Arabic Words with their individual letters)
   const fallbackWords = [
@@ -513,6 +519,18 @@ import { handleExitSite } from './utils/navigation';
       progressFillEl.style.width = `${percentage}%`;
     }
 
+    // Update hearts display
+    const heartImgs = document.querySelectorAll('#header-hearts img');
+    heartImgs.forEach((img, idx) => {
+      if (idx < lives) {
+        img.classList.remove('is-inactive');
+        img.classList.add('is-active');
+      } else {
+        img.classList.add('is-inactive');
+        img.classList.remove('is-active');
+      }
+    });
+
     // Update letter slot classes
     for (let i = 0; i < targetLetters.length; i++) {
       const slot = document.getElementById(`slot-${i}`);
@@ -528,6 +546,104 @@ import { handleExitSite } from './utils/navigation';
     }
   };
 
+  let endgameRoot = null;
+  const renderReactEndgame = (isSubmitting = false, apiResult = {}) => {
+    const sessionData = apiResult?.session || apiResult?.data?.session || {};
+    const finalScore = apiResult?.score ?? apiResult?.data?.score ?? score;
+
+    // Extract coins from the complete endpoint response
+    let earnedCoins = 0;
+    if (typeof apiResult?.coins === 'number') {
+      earnedCoins = apiResult.coins;
+    } else if (typeof apiResult?.data?.coins === 'number') {
+      earnedCoins = apiResult.data.coins;
+    } else if (apiResult?.coins !== undefined && apiResult?.coins !== null) {
+      earnedCoins = Number(apiResult.coins) || 0;
+    } else if (apiResult?.data?.coins !== undefined && apiResult?.data?.coins !== null) {
+      earnedCoins = Number(apiResult.data.coins) || 0;
+    } else {
+      earnedCoins = score;
+    }
+
+    const finalCorrect = typeof sessionData?.correctAnswers === 'number'
+      ? sessionData.correctAnswers
+      : score;
+    // Every wrong char selected/hit in the game is counted in totalMistakes
+    const finalWrong = Math.max(totalMistakes, Number(sessionData?.wrongAnswers) || 0);
+    const totalQuestionsCount = wordsList ? wordsList.length : 0;
+    const finalTotalAnswers = finalCorrect + finalWrong;
+    
+    const hudContainer = document.getElementById('hud-container');
+    if (hudContainer) hudContainer.style.display = 'none';
+    const mobileControls = document.getElementById('mobile-controls');
+    if (mobileControls) mobileControls.style.display = 'none';
+
+    let reactRootEl = document.getElementById('react-endgame-root');
+    if (!reactRootEl) {
+      reactRootEl = document.createElement('div');
+      reactRootEl.id = 'react-endgame-root';
+      reactRootEl.style.position = 'fixed';
+      reactRootEl.style.top = '0';
+      reactRootEl.style.left = '0';
+      reactRootEl.style.width = '100vw';
+      reactRootEl.style.height = '100vh';
+      reactRootEl.style.zIndex = '9999';
+      document.body.appendChild(reactRootEl);
+    }
+    
+    if (!endgameRoot) {
+      endgameRoot = createRoot(reactRootEl);
+    }
+
+    endgameRoot.render(
+      React.createElement(EndGameFlow, {
+        isSubmitting,
+        score: finalScore,
+        totalScore: totalQuestionsCount,
+        totalWords: totalQuestionsCount,
+        totalQuestions: totalQuestionsCount,
+        totalAnswers: finalTotalAnswers,
+        correctAnswers: finalCorrect,
+        wrongAnswers: finalWrong,
+        coins: earnedCoins,
+        onRetry: () => window.location.reload(),
+        onBack: handleExitSite
+      })
+    );
+  };
+
+  const finishGame = () => {
+    isTransitioning = true;
+    gameWon = (lives > 0);
+
+    // Clean up balloons and bullets from screen
+    balloons.forEach(b => b.destroy());
+    balloons.length = 0;
+    bullets.forEach(b => b.destroy());
+    bullets.length = 0;
+
+    if (gameAPI && sessionId) {
+      const currentSessionId = sessionId;
+      renderReactEndgame(true);
+      
+      const submitPromise = sessionAnswers.length > 0
+        ? gameAPI.submitAnswers(currentSessionId, sessionAnswers)
+        : Promise.resolve();
+
+      submitPromise
+        .then(() => gameAPI.completeSession(currentSessionId))
+        .then(result => {
+          renderReactEndgame(false, result);
+        })
+        .catch(err => {
+          console.error('Failed to complete session', err);
+          renderReactEndgame(false);
+        });
+    } else {
+      renderReactEndgame(false);
+    }
+  };
+
   const resetGame = () => {
     score = 0;
     combo = 0;
@@ -535,6 +651,7 @@ import { handleExitSite } from './utils/navigation';
     gameWon = false;
     gameStarted = false;
     totalMistakes = 0;
+    lives = MAX_LIVES;
     currentQuestionIndex = 0;
     sessionId = null; // Clear session ID so a new one is created on next start
     sessionAnswers = [];
@@ -616,6 +733,10 @@ import { handleExitSite } from './utils/navigation';
       controller.keys.shoot.pressed
     )) {
       gameStarted = true;
+      const hudContainer = document.getElementById('hud-container');
+      if (hudContainer) hudContainer.style.display = 'flex';
+      const mobileControls = document.getElementById('mobile-controls');
+      if (mobileControls) mobileControls.style.display = 'flex';
       
       // Start backend session if not already started via welcome screen click
       if (gameAPI && !sessionId) {
@@ -865,6 +986,7 @@ import { handleExitSite } from './utils/navigation';
             player.triggerHeadAnimation('wrong');
 
             totalMistakes++;
+            lives = Math.max(0, lives - 1);
             
             // Wrong answer gives 0 points
             scoreTextText = `0`;
@@ -894,6 +1016,17 @@ import { handleExitSite } from './utils/navigation';
           ft.anchor.set(0.5);
           effectContainer.addChild(ft);
           floatingTexts.push(ft);
+
+          if (!letterCollected && lives <= 0) {
+            bullet.destroy();
+            bullets.splice(i, 1);
+            isTransitioning = true;
+            setTimeout(() => {
+              if (answerFeedbackEl) answerFeedbackEl.classList.add('hidden');
+              finishGame();
+            }, 600);
+            return;
+          }
 
           // Check if word is complete
           const allCollected = collectedLetters.every(c => c);
@@ -936,80 +1069,8 @@ import { handleExitSite } from './utils/navigation';
                 isTransitioning = false;
               } else {
                 // No more words, completely finish the game session
-                gameWon = true;
-
-              let endgameRoot = null;
-              const renderReactEndgame = (isSubmitting = false, apiResult = {}) => {
-                const sessionData = apiResult?.session || apiResult?.data?.session || {};
-                const finalScore = apiResult?.score ?? apiResult?.data?.score ?? score;
-
-                // Extract coins from the first part of the complete endpoint response (data.coins)
-                let earnedCoins = 0;
-                if (typeof apiResult?.coins === 'number') {
-                  earnedCoins = apiResult.coins;
-                } else if (typeof apiResult?.data?.coins === 'number') {
-                  earnedCoins = apiResult.data.coins;
-                } else if (apiResult?.coins !== undefined && apiResult?.coins !== null) {
-                  earnedCoins = Number(apiResult.coins) || 0;
-                } else if (apiResult?.data?.coins !== undefined && apiResult?.data?.coins !== null) {
-                  earnedCoins = Number(apiResult.data.coins) || 0;
-                }
-
-                const finalCorrect = typeof sessionData?.correctAnswers === 'number'
-                  ? sessionData.correctAnswers
-                  : score;
-                // Every wrong char selected/hit in the game is counted in totalMistakes
-                const finalWrong = Math.max(totalMistakes, Number(sessionData?.wrongAnswers) || 0);
-                const totalQuestionsCount = wordsList.length;
-                
-                let reactRootEl = document.getElementById('react-endgame-root');
-                if (!reactRootEl) {
-                  reactRootEl = document.createElement('div');
-                  reactRootEl.id = 'react-endgame-root';
-                  reactRootEl.style.position = 'fixed';
-                  reactRootEl.style.top = '0';
-                  reactRootEl.style.left = '0';
-                  reactRootEl.style.width = '100vw';
-                  reactRootEl.style.height = '100vh';
-                  reactRootEl.style.zIndex = '9999';
-                  document.body.appendChild(reactRootEl);
-                }
-                
-                if (!endgameRoot) {
-                  endgameRoot = createRoot(reactRootEl);
-                }
-
-                endgameRoot.render(
-                  React.createElement(EndGameFlow, {
-                    isSubmitting,
-                    score: finalScore,
-                    totalScore: totalQuestionsCount,
-                    totalAnswers: totalQuestionsCount,
-                    correctAnswers: finalCorrect,
-                    wrongAnswers: finalWrong,
-                    coins: earnedCoins,
-                    onRetry: () => window.location.reload(),
-                    onBack: handleExitSite
-                  })
-                );
-              };
-
-              if (gameAPI && sessionId) {
-                const currentSessionId = sessionId; // Capture to prevent it from being nullified by resetGame
-                renderReactEndgame(true);
-                gameAPI.submitAnswers(currentSessionId, sessionAnswers)
-                  .then(() => gameAPI.completeSession(currentSessionId))
-                  .then(result => {
-                    renderReactEndgame(false, result);
-                  })
-                  .catch(err => {
-                    console.error('Failed to complete session', err);
-                    renderReactEndgame(false);
-                  });
-              } else {
-                renderReactEndgame(false);
+                finishGame();
               }
-            } // Close the 'else' block for !hasMore
             }, 1500); // Close setTimeout
             
             return; // Exit the ticker loop immediately since all objects are destroyed

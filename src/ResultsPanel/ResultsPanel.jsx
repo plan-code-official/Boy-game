@@ -27,6 +27,7 @@ export default function ResultsPanel({
   wrongAnswers,
   coins,
   totalQuestions,
+  totalWords,
   totalAnswers,
   score,
   onRetry,
@@ -36,10 +37,13 @@ export default function ResultsPanel({
   const correct = numberValue(correctAnswers ?? score);
   const wrong = numberValue(wrongAnswers);
   const earnedCoins = numberValue(coins);
-  const total = numberValue(totalAnswers) || numberValue(totalQuestions) || correct;
-  const denominator = total + wrong;
-  const correctPercent = denominator > 0 ? Math.max(0, Math.min(100, Math.round((correct / denominator) * 100))) : 0;
-  const isSuccess = denominator > 0 && correctPercent >= 50;
+  
+  // Calculate degree with (right answers) / (total questions number)
+  const questionCount = numberValue(totalQuestions) || numberValue(totalWords) || numberValue(totalAnswers) || (correct + wrong) || 1;
+  const correctPercent = questionCount > 0 ? Math.max(0, Math.min(100, Math.round((correct / questionCount) * 100))) : 0;
+
+  // Celebration / success state: user answered more than 50% of questions correctly
+  const isSuccess = questionCount > 0 && correctPercent >= 50;
 
   // The layout is sized from the exported image's real width / height.
   const [ratio, setRatio] = useState(null);

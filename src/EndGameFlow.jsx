@@ -8,6 +8,8 @@ export default function EndGameFlow({
   score,
   totalScore,
   totalAnswers,
+  totalWords,
+  totalQuestions,
   correctAnswers,
   wrongAnswers,
   coins,
@@ -19,9 +21,19 @@ export default function EndGameFlow({
 
   useEffect(() => {
     if (!isSubmitting) {
-      setShowCelebration(true);
+      const wordsCount = Number(totalWords) || Number(totalQuestions) || Number(totalScore) || 1;
+      const correct = Number(correctAnswers ?? score) || 0;
+      // Show celebration if user answers more than 50% of words correctly
+      const shouldCelebrate = wordsCount > 0 && (correct / wordsCount) >= 0.5;
+
+      if (shouldCelebrate) {
+        setShowCelebration(true);
+      } else {
+        setShowCelebration(false);
+        setShowResults(true);
+      }
     }
-  }, [isSubmitting]);
+  }, [isSubmitting, totalWords, totalQuestions, totalScore, correctAnswers, score]);
 
   const handleCelebrationComplete = () => {
     setShowCelebration(false);
@@ -50,8 +62,9 @@ export default function EndGameFlow({
           correctAnswers={correctAnswers}
           wrongAnswers={wrongAnswers}
           coins={coins}
-          totalQuestions={totalScore}
-          totalAnswers={totalAnswers || totalScore}
+          totalQuestions={totalQuestions || totalScore}
+          totalWords={totalWords || totalQuestions || totalScore}
+          totalAnswers={totalAnswers || (Number(correctAnswers ?? score) + Number(wrongAnswers))}
           onRetry={onRetry}
           onBack={onBack}
         />
