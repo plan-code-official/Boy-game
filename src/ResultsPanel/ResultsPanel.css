@@ -28,7 +28,7 @@
 
 .results-screen,
 .results-screen * {
-  font-family: 'Lateef', sans-serif !important;
+  font-family: 'Cairo', sans-serif !important;
 }
 
 .results-screen {
@@ -48,7 +48,7 @@
   --rp-btn-ar-w: 525;
   /* button aspect ratio */
   --rp-btn-ar-h: 231;
-  --rp-num-font: 'Lateef', sans-serif;
+  --rp-num-font: 'Poppins', 'Cairo', sans-serif;
   /* set to the font Figma shows for the numbers */
 
   /* ---- Derived: largest panel that fits the width AND the height ---- */
