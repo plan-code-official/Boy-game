@@ -1,8 +1,9 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const rawApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://learning-platform-1euu.onrender.com/api/v1';
+const API_BASE_URL = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl.replace(/\/+$/, '')}/api/v1`;
 
 let latestToken = null;
 
-const refreshAccessToken = async () => {
+export const refreshAccessToken = async () => {
   try {
     let refreshRes = await fetch(`${API_BASE_URL}/student/refresh`, {
       method: 'POST',

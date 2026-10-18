@@ -37,18 +37,10 @@
           </div>
         </div>
 
-        <!-- Center: Question Info & Word Slots -->
-        <div class="header-center-group">
-          <div class="header-question-info" dir="rtl">
-            <span class="header-question-label">السؤال</span>
-            <strong class="header-question-numbers" id="question-counter" dir="ltr">1/5</strong>
-          </div>
-
-          <div class="header-word-slots-container">
-            <div id="word-target-container">
-              <div id="word-slots"></div>
-            </div>
-          </div>
+        <!-- Center: Question Info Pill Badge -->
+        <div class="header-question-info" dir="rtl">
+          <span class="header-question-label">السؤال</span>
+          <strong class="header-question-numbers" id="question-counter" dir="ltr">1/5</strong>
         </div>
 
         <!-- Right: Exit Button -->
@@ -61,19 +53,33 @@
       <div class="header-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1">
         <div id="header-progress-fill" class="header-progress-fill"></div>
       </div>
+
+      <!-- Unified Question & Target Slots Row -->
+      <div id="question-media-panel" class="header-question-row" dir="rtl">
+        <div id="question-image-wrapper" class="question-image-wrapper hidden">
+          <img id="question-media-image" class="question-media-image" alt="صورة السؤال" />
+          <span class="question-zoom-badge">اضغط للتكبير</span>
+        </div>
+
+        <div class="question-prompt-group">
+          <div id="question-media-text" class="question-media-text"></div>
+          <button id="question-media-audio" class="question-media-audio" type="button" aria-label="تشغيل صوت السؤال">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 10v4h3l4 3V7l-4 3H4Z" />
+              <path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="header-word-slots-container">
+          <div id="word-target-container">
+            <div id="word-slots"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div id="question-media-panel" class="question-media-panel hidden" dir="rtl">
-    <div id="question-media-text" class="question-media-text"></div>
-    <button id="question-media-audio" class="question-media-audio" type="button" aria-label="تشغيل صوت السؤال">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 10v4h3l4 3V7l-4 3H4Z" />
-        <path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" />
-      </svg>
-    </button>
-    <img id="question-media-image" class="question-media-image" alt="صورة السؤال" />
-  </div>
   <div id="question-image-modal" class="question-image-modal hidden" role="dialog" aria-modal="true">
     <button id="question-image-modal-close" type="button" aria-label="إغلاق الصورة">×</button>
     <img id="question-image-modal-img" alt="صورة السؤال مكبرة" />

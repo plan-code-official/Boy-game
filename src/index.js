@@ -14,7 +14,7 @@ import hakimLeftArm from './hakim/left-arm.png';
 import bgImage from './BG.png';
 import { Bullet } from './Bullet';
 import { playShootSound, playPopSound, playVictorySound, playErrorSound } from './SoundEffects';
-import { GameAPI, BOY_GAME_ID, wordToLetters } from './gameApi';
+import { GameAPI, BOY_GAME_ID, wordToLetters, refreshAccessToken } from './gameApi';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import EndGameFlow from './EndGameFlow';
@@ -36,7 +36,12 @@ import { handleExitSite } from './utils/navigation';
   // API Setup - Read URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const urlGameId = urlParams.get('gameId') ? parseInt(urlParams.get('gameId')) : null;
-  const urlLessonId = urlParams.get('lessonId') ? parseInt(urlParams.get('lessonId')) : null;
+  const lessonIdParam = urlParams.get('lessonId');
+  const storedLessonId = sessionStorage.getItem('boyGame_lessonId') || localStorage.getItem('boyGame_lessonId');
+  const urlLessonId = lessonIdParam ? parseInt(lessonIdParam) : (storedLessonId ? parseInt(storedLessonId) : null);
+  if (lessonIdParam) {
+    sessionStorage.setItem('boyGame_lessonId', lessonIdParam);
+  }
   const tokenParam = urlParams.get('token');
   
   let token = tokenParam || localStorage.getItem('childToken') || sessionStorage.getItem('childToken');
@@ -153,6 +158,10 @@ import { handleExitSite } from './utils/navigation';
       description: 'لا يمكننا العثور على الدرس المطلوب. يرجى التأكد من الرابط أو العودة للرئيسية.'
     });
     return; // block game
+  }
+
+  if (!token) {
+    token = await refreshAccessToken();
   }
 
   if (!token) {
@@ -453,23 +462,47 @@ import { handleExitSite } from './utils/navigation';
     const mediaText = document.getElementById('question-media-text');
     const mediaImage = document.getElementById('question-media-image');
     const mediaAudio = document.getElementById('question-media-audio');
+    const imageWrapper = document.getElementById('question-image-wrapper');
     if (mediaPanel && mediaText && mediaImage && mediaAudio) {
-      const questionText = typeof wordObj.questionText === 'string'
+      const rawQuestionText = typeof wordObj.questionText === 'string'
         ? wordObj.questionText.trim()
         : '';
-      const visibleQuestionText = questionText === '.' ? '' : questionText;
+      const visibleQuestionText = (rawQuestionText === '.' || rawQuestionText === '<p>.</p>') ? '' : rawQuestionText;
       mediaText.textContent = visibleQuestionText;
-      mediaImage.src = wordObj.imageUrl || '';
-      mediaImage.classList.toggle('hidden', !wordObj.imageUrl);
-      mediaAudio.classList.toggle('hidden', !wordObj.audioUrl);
-      mediaPanel.classList.toggle('hidden', !visibleQuestionText && !wordObj.imageUrl && !wordObj.audioUrl);
-      mediaAudio.onclick = () => { if (wordObj.audioUrl) new Audio(wordObj.audioUrl).play().catch(() => {}); };
-      mediaImage.onclick = () => {
+      mediaText.style.display = visibleQuestionText ? 'block' : 'none';
+
+      if (wordObj.audioUrl) {
+        mediaAudio.style.display = 'grid';
+        mediaAudio.onclick = () => { if (wordObj.audioUrl) new Audio(wordObj.audioUrl).play().catch(() => {}); };
+      } else {
+        mediaAudio.style.display = 'none';
+        mediaAudio.onclick = null;
+      }
+
+      const openImageModal = () => {
         if (!wordObj.imageUrl) return;
         const modal = document.getElementById('question-image-modal');
         const modalImage = document.getElementById('question-image-modal-img');
         if (modal && modalImage) { modalImage.src = wordObj.imageUrl; modal.classList.remove('hidden'); }
       };
+
+      if (wordObj.imageUrl && typeof wordObj.imageUrl === 'string' && wordObj.imageUrl.trim() !== '') {
+        mediaImage.src = wordObj.imageUrl;
+        mediaImage.onerror = () => {
+          mediaImage.style.display = 'none';
+          if (imageWrapper) imageWrapper.classList.add('hidden');
+        };
+        mediaImage.onload = () => {
+          mediaImage.style.display = 'block';
+          if (imageWrapper) imageWrapper.classList.remove('hidden');
+        };
+        mediaImage.onclick = openImageModal;
+        if (imageWrapper) imageWrapper.onclick = openImageModal;
+      } else {
+        mediaImage.src = '';
+        mediaImage.style.display = 'none';
+        if (imageWrapper) imageWrapper.classList.add('hidden');
+      }
     }
     targetWord = wordObj.word;
     targetWordId = wordObj.id;
