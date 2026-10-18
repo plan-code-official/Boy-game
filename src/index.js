@@ -442,8 +442,40 @@ import { handleExitSite } from './utils/navigation';
   const retryBtn = document.getElementById('retry-button');
   const imageModal = document.getElementById('question-image-modal');
   const imageModalClose = document.getElementById('question-image-modal-close');
-  imageModalClose?.addEventListener('click', () => imageModal?.classList.add('hidden'));
-  imageModal?.addEventListener('click', (event) => { if (event.target === imageModal) imageModal.classList.add('hidden'); });
+  const imageModalImg = document.getElementById('question-image-modal-img');
+
+  let activeQuestionAudio = null;
+  const playQuestionAudio = (audioUrl) => {
+    const url = audioUrl || (wordsList && wordsList[currentQuestionIndex] && wordsList[currentQuestionIndex].audioUrl);
+    if (!url) return;
+    try {
+      if (activeQuestionAudio) {
+        activeQuestionAudio.pause();
+        activeQuestionAudio.currentTime = 0;
+      }
+      activeQuestionAudio = new Audio(url);
+      activeQuestionAudio.play().catch((err) => {
+        console.log('Audio playback prevented / error:', err);
+      });
+    } catch (e) {
+      console.error('Audio playback error:', e);
+    }
+  };
+
+  imageModalClose?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    imageModal?.classList.add('hidden');
+  });
+  imageModal?.addEventListener('click', (event) => {
+    if (event.target === imageModal) {
+      event.stopPropagation();
+      imageModal.classList.add('hidden');
+    }
+  });
+  imageModalImg?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    playQuestionAudio();
+  });
 
   if (retryBtn) {
     retryBtn.addEventListener('click', () => {
@@ -473,18 +505,48 @@ import { handleExitSite } from './utils/navigation';
 
       if (wordObj.audioUrl) {
         mediaAudio.style.display = 'grid';
-        mediaAudio.onclick = () => { if (wordObj.audioUrl) new Audio(wordObj.audioUrl).play().catch(() => {}); };
+        mediaAudio.onclick = (e) => {
+          if (e) e.stopPropagation();
+          playQuestionAudio(wordObj.audioUrl);
+        };
+        // Auto-play audio when new question mounts
+        playQuestionAudio(wordObj.audioUrl);
       } else {
         mediaAudio.style.display = 'none';
         mediaAudio.onclick = null;
       }
 
-      const openImageModal = () => {
+      const openImageModal = (e) => {
+        if (e) e.stopPropagation();
         if (!wordObj.imageUrl) return;
         const modal = document.getElementById('question-image-modal');
         const modalImage = document.getElementById('question-image-modal-img');
-        if (modal && modalImage) { modalImage.src = wordObj.imageUrl; modal.classList.remove('hidden'); }
+        if (modal && modalImage) {
+          modalImage.src = wordObj.imageUrl;
+          modal.classList.remove('hidden');
+        }
       };
+
+      const handleImageClick = (e) => {
+        if (e) e.stopPropagation();
+        if (wordObj.audioUrl) {
+          playQuestionAudio(wordObj.audioUrl);
+          if (imageWrapper) {
+            imageWrapper.classList.add('audio-playing');
+            setTimeout(() => imageWrapper.classList.remove('audio-playing'), 800);
+          }
+        } else {
+          openImageModal(e);
+        }
+      };
+
+      const zoomBadge = imageWrapper ? imageWrapper.querySelector('.question-zoom-badge') : null;
+      if (zoomBadge) {
+        zoomBadge.onclick = (e) => {
+          if (e) e.stopPropagation();
+          openImageModal(e);
+        };
+      }
 
       if (wordObj.imageUrl && typeof wordObj.imageUrl === 'string' && wordObj.imageUrl.trim() !== '') {
         mediaImage.src = wordObj.imageUrl;
@@ -496,8 +558,8 @@ import { handleExitSite } from './utils/navigation';
           mediaImage.style.display = 'block';
           if (imageWrapper) imageWrapper.classList.remove('hidden');
         };
-        mediaImage.onclick = openImageModal;
-        if (imageWrapper) imageWrapper.onclick = openImageModal;
+        mediaImage.onclick = handleImageClick;
+        if (imageWrapper) imageWrapper.onclick = handleImageClick;
       } else {
         mediaImage.src = '';
         mediaImage.style.display = 'none';
@@ -649,6 +711,11 @@ import { handleExitSite } from './utils/navigation';
     isTransitioning = true;
     gameWon = (lives > 0);
 
+    if (activeQuestionAudio) {
+      activeQuestionAudio.pause();
+      activeQuestionAudio = null;
+    }
+
     // Clean up balloons and bullets from screen
     balloons.forEach(b => b.destroy());
     balloons.length = 0;
@@ -678,6 +745,10 @@ import { handleExitSite } from './utils/navigation';
   };
 
   const resetGame = () => {
+    if (activeQuestionAudio) {
+      activeQuestionAudio.pause();
+      activeQuestionAudio = null;
+    }
     score = 0;
     combo = 0;
     comboTimer = 0;

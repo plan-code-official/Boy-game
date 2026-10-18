@@ -73,9 +73,14 @@ export class Controller {
   }
 
   pointerdownHandler(event) {
-    // Ignore pointer clicks that land on the welcome screen overlay
-    const welcomeRoot = document.getElementById('react-welcome-root');
-    if (welcomeRoot && welcomeRoot.contains(event.target)) return;
+    // Ignore pointer clicks that land on UI elements, overlays, HUD, header, modals, or controls
+    const isUI =
+      event.target &&
+      event.target.closest &&
+      event.target.closest(
+        '#hud-container, #game-header-new, #question-media-panel, #question-image-wrapper, #question-image-modal, .question-image-modal, #react-welcome-root, #react-endgame-root, #mobile-controls, #portrait-overlay, #answer-feedback, #error-overlay, button, a'
+      );
+    if (isUI) return;
 
     if (event.button === 0) {
       this.keys.shoot.pressed = true;
