@@ -8,7 +8,7 @@
     "dev": "vite --port 5175",
     "start": "vite --port 5175",
     "build": "vite build",
-    "deploy": "npm run build && wrangler deploy"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@esotericsoftware/spine-pixi-v8": "~4.3.7",
